@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # Submit a forecast question to the Bankr PAYG API.
-# Usage: ./bankr-payg-forecast.sh "Will X happen by Y?"
+# Usage: BANKR_API_KEY=bk_... ./bankr-payg-forecast.sh "Will X happen by Y?"
 
 set -euo pipefail
 
 BASE_URL="${BANKR_PAYG_URL:-https://bankr-payg.onrender.com}"
+API_KEY="${BANKR_API_KEY:?Set BANKR_API_KEY to your Bankr API key (bk_...)}"
 QUESTION="${1:?Usage: bankr-payg-forecast.sh \"<question>\"}"
 
 response=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/forecast" \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${API_KEY}" \
   -d "{\"question\": $(echo "$QUESTION" | jq -Rs '.')}" \
   --connect-timeout 10 --max-time 120)
 
@@ -20,6 +22,7 @@ if [[ "$http_code" =~ ^5 ]]; then
   sleep 2
   response=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/forecast" \
     -H "Content-Type: application/json" \
+    -H "Authorization: Bearer ${API_KEY}" \
     -d "{\"question\": $(echo "$QUESTION" | jq -Rs '.')}" \
     --connect-timeout 10 --max-time 120)
   http_code=$(echo "$response" | tail -1)
